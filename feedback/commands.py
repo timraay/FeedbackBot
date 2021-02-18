@@ -738,7 +738,7 @@ async def set_feed_reactions(ctx, feed, value):
     embed.set_footer(text=f"Feed: {feed.feed_name} - ID: {feed.feed_shortname}")
     if value: embed.set_author(name="Feed reactions updated", icon_url="https://cdn.discordapp.com/emojis/809149148356018256.png")
     else: embed.set_author(name="Feed will now no longer show reactions", icon_url="https://cdn.discordapp.com/emojis/809149148356018256.png")
-    embed.add_field(name="Old value", value=feed.reactions)
+    embed.add_field(name="Old value", value=feed.reactions if feed.reactions else 'None')
     embed.add_field(name="New value", value=value)
 
     feed.reactions = value
