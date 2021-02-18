@@ -51,17 +51,41 @@ class triggers(commands.Cog):
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):
-        if payload.member.bot: return
-        try: trigger = models.Trigger.match(message_id=payload.message_id, trigger_emoji=str(payload.emoji))
-        except: return
-        feed = trigger.feed
-        guild = self.bot.get_guild(payload.guild_id)
-        channel = guild.get_channel(payload.channel_id)
-        message = await channel.fetch_message(payload.message_id)
-        await message.remove_reaction(payload.emoji, payload.member)
-        ctx = await self.bot.get_context(message)
-        ctx.author = payload.member
-        await cmd.create_feedback(ctx, feed)
+        if payload.member.bot:
+            return
+        
+        trigger = None
+        feedback = None
+        try: trigger = models.Trigger(options={'message_id': payload.message_id, 'trigger_emoji': str(payload.emoji)})
+        except:
+            try: feedback = models.Feedback(options={'message_id': payload.message_id})
+            except: pass
+        
+        if feedback or trigger:
+            guild = self.bot.get_guild(payload.guild_id)
+            channel = guild.get_channel(payload.channel_id)
+            message = await channel.fetch_message(payload.message_id)
+            if not message: return
+            ctx = await self.bot.get_context(message)
+            ctx.author = payload.member
+
+        if feedback:
+            feed = feedback.feed
+            emojis = feed.reactions.split(',')
+            if str(payload.emoji) not in emojis:
+                await message.remove_reaction(payload.emoji, payload.member)
+            if str(payload.emoji) == "✍️":
+                if payload.member.id == feedback.feedback_author or await models.has_perms(level=1).predicate(ctx):
+                    await cmd.edit_feedback(ctx, feed, feedback)
+            elif str(payload.emoji) == "🗑️":
+                if payload.member.id == feedback.feedback_author or await models.has_perms(level=1).predicate(ctx):
+                    feedback.delete()
+                    await message.delete()
+
+        elif trigger:
+            feed = trigger.feed
+            await message.remove_reaction(payload.emoji, payload.member)
+            await cmd.create_feedback(ctx, feed)
 
                
 

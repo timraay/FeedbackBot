@@ -290,10 +290,10 @@ class Feedback():
         cur.execute("DELETE FROM feedback WHERE feed_id = ? AND feedback_id = ?", (self.feed_id, self.feedback_id))
         db.commit()
         self = None
-def has_unfinished_feedback(guild_id, user_id):
+def is_creating_feedback(guild_id, user_id):
     cur.execute("""SELECT feed_id, feedback_id FROM feedback
     WHERE feed_id IN (SELECT feed_id FROM feeds WHERE guild_id = ?)
-    AND feedback_author = ? AND finished = 0""", (guild_id, user_id))
+    AND feedback_author = ? AND creation_channel_id""", (guild_id, user_id))
     res = cur.fetchone()
     if res: return Feedback(options={'feed_id': res[0], 'feedback_id': res[1]})
     else: return None
@@ -323,13 +323,6 @@ class Trigger():
         if not trigger_id: raise NotFound('No trigger could be found with index %s' % index)
         return cls(options={'trigger_id': trigger_id[0]})
     
-    @classmethod
-    def match(cls, message_id, trigger_emoji):
-        cur.execute(f"SELECT trigger_id FROM triggers WHERE trigger_message_id = ? AND trigger_emoji = ? ORDER BY trigger_id", (message_id, trigger_emoji))
-        trigger_id = cur.fetchone()
-        if not trigger_id: raise NotFound('No trigger could be found with trigger_message_id %s and trigger_emoji %s' % (message_id, trigger_emoji))
-        return cls(options={'trigger_id': trigger_id[0]})
-
     @property
     def feed(self):
         return Feed(options={'feed_id': self.feed_id})

@@ -973,59 +973,24 @@ async def set_trigger_message(ctx, trigger, value):
 
 
 
-async def show_feedback(ctx, feed, feedback):
-    label = feedback.label
-    if label:
-        color = discord.Color(int(label.label_color, 16))
-        title = f"#{feedback.feedback_id} | {feed.feed_name} ({label.label_name})"
-    else:
-        color = discord.Color(int(feed.feed_color, 16))
-        title = f"#{feedback.feedback_id} | {feed.feed_name}"
-
-    embed = discord.Embed(color=color, title=title, description=feedback.feedback_desc)
-    author = ctx.guild.get_member(feedback.feedback_author)
-    if author: embed.set_author(icon_url=author.avatar_url, name=str(author))
-    else: embed.set_author(name="⚠️ The author has left the server")
-    embed.add_field(name='Author', value=feedback.feedback_author)
-    embed.add_field(name='Feed', value=feed.feed_name)
-    embed.add_field(name='Label', value=label.label_name if label else "None")
-
-    message = None
-    channel = ctx.guild.get_channel(feedback.channel_id)
-    if channel: message = await channel.fetch_message(feedback.message_id)
-
-    if feed.reactions:
-        if message:
-            emojis = feed.reactions.split(',')
-            reactions = dict()
-            for emoji in emojis:
-                reactions[emoji] = 0
-            for reaction in message.reactions:
-                emoji = str(reaction.emoji)
-                if emoji in emojis:
-                    if ctx.bot.user in (await reaction.users().flatten()): reactions[emoji] = reaction.count - 1
-                    else: reactions[emoji] = reaction.count
-            embed.add_field(name='Reactions', value=", ".join([f'{k} **{v}**' for k, v in reactions.items()]), inline=False)
-        else:
-            embed.add_field(name='Reactions', value="Could no longer find message", inline=False)
-
-    if message: embed.add_field(name='‏', value=f"[[Jump to message]]({message.jump_url})", inline=False)
-    if feedback.feedback_desc_url: embed.set_image(url=feedback.feedback_desc_url)
-    await ctx.send(embed=embed)
-async def create_feedback(ctx, feed):
+async def _build_feedback(ctx, feed, feedback=None):
     # Does feed channel still exist?
     feed_channel = ctx.guild.get_channel(feed.feed_channel_id)
     if not feed_channel: raise CustomException("Can't create feedback!", "No channel to send feedback to was set")
 
     # Is user already creating feedback?
-    feedback = models.has_unfinished_feedback(ctx.guild.id, ctx.author.id)
-    if feedback:
-        channel = ctx.guild.get_channel(feedback.creation_channel_id)
+    fb = models.is_creating_feedback(ctx.guild.id, ctx.author.id)
+    if fb:
+        channel = ctx.guild.get_channel(fb.creation_channel_id)
         if not channel:
-            feedback.delete()
+            if fb.finished:
+                fb.creation_channel_id = 0
+                fb.save()
+            else:
+                fb.delete()
         else:
             await channel.send(f"{ctx.author.mention}, finish or close this first before attempting to create more!")
-            return            
+            return
 
     # Create channel
     overwrites = {
@@ -1043,8 +1008,18 @@ async def create_feedback(ctx, feed):
 
     try: channel = await feed_channel.category.create_text_channel(f"{feed.feed_name} {ctx.author.name}", overwrites=overwrites)
     except: raise CustomException("I don't have permission!", "Contact a server admin to give me Manage Channels and Manage Roles perms.")
-    message = await channel.send(f"{ctx.author.mention} create your feedback here!")
-    feedback = models.Feedback.new(feed_id=feed.feed_id, feedback_author=ctx.author.id, creation_channel_id=channel.id)
+    if feedback:
+        _mode = "edit"
+        title = f"Editing {feed.feed_name}"
+        message = await channel.send(f"{ctx.author.mention} edit your feedback here!")
+        feedback.creation_channel_id = channel.id
+        feedback.save()
+        feedback.finished = 0
+    else:
+        _mode = "create"
+        title = f"Creating new {feed.feed_name}"
+        message = await channel.send(f"{ctx.author.mention} create your feedback here!")
+        feedback = models.Feedback.new(feed_id=feed.feed_id, feedback_author=ctx.author.id, creation_channel_id=channel.id)
 
     ### LABEL
 
@@ -1059,7 +1034,7 @@ async def create_feedback(ctx, feed):
 
     labels = feed.labels
     if labels:
-        embed.set_author(icon_url=ctx.guild.icon_url, name="Creating new feedback... (1/3)")
+        embed.set_author(icon_url=ctx.guild.icon_url, name=f"{title}... (1/3)")
         embed.set_footer(text="Want to cancel this? React with X under this message.")
         embed.description += "\n\n**First, select a label by reacting to this message.**"
         for label in labels:
@@ -1076,9 +1051,9 @@ async def create_feedback(ctx, feed):
         while res not in emojis:
             reaction, user = await ctx.bot.wait_for('reaction_add', check=check_reaction)
             if str(reaction.emoji) == "<:no:808045512393621585>":
-                feedback.delete()
+                if _mode == "create": feedback.delete()
                 await channel.delete()
-                return
+                return False
             else:
                 emoji = str(reaction.emoji)
                 await message.remove_reaction(emoji, user)
@@ -1091,7 +1066,7 @@ async def create_feedback(ctx, feed):
         await message.clear_reactions()
 
         embed = discord.Embed(color=discord.Color(int(label.label_color, 16)))
-        embed.set_author(icon_url=ctx.guild.icon_url, name="Creating new feedback... (2/3)")
+        embed.set_author(icon_url=ctx.guild.icon_url, name=f"{title}... (2/3)")
         embed.set_footer(text="Want to cancel this? Type \"cancel\" as your response.")
         embed.description = feed.feed_desc
         if label.label_desc_url: embed.set_image(url=label.label_desc_url)
@@ -1107,12 +1082,11 @@ async def create_feedback(ctx, feed):
         
     else:
         label = None
-        embed.set_author(icon_url=ctx.guild.icon_url, name="Creating new feedback... (1/2)")
+        embed.set_author(icon_url=ctx.guild.icon_url, name=f"{title}... (1/2)")
         embed.set_footer(text="Want to cancel this? Type \"cancel\" as your response.")
         embed.description += "\n\n**Type out your feedback below.**"
         await message.edit(content="", embed=embed)
 
-    
     while not feedback.finished:
 
         ### DESCRIPTION
@@ -1123,9 +1097,9 @@ async def create_feedback(ctx, feed):
         while not res:
             res = await ctx.bot.wait_for('message', check=check_message)
             if res.content.lower() == "cancel":
-                feedback.delete()
+                if _mode == "create": feedback.delete()
                 await channel.delete()
-                return
+                return False
             if res.author != ctx.author:
                 res = None
 
@@ -1171,19 +1145,25 @@ async def create_feedback(ctx, feed):
         await message.clear_reactions()
         if emoji == "<:yes:809149148356018256>":
             embed.set_footer()
-            sent = await feed_channel.send(embed=embed)
+            if _mode == "create":
+                sent = await feed_channel.send(embed=embed)
+                feedback.channel_id = sent.channel.id
+                feedback.message_id = sent.id
+            elif _mode == "edit": 
+                await ctx.message.edit(embed=embed)
             
             feedback.finished = 1
-            feedback.channel_id = sent.channel.id
-            feedback.message_id = sent.id
+            feedback.creation_channel_id = 0
             feedback.save()
 
             await channel.delete()
 
-            for emoji in feed.reactions.split(','):
-                if emoji:
-                    try: await sent.add_reaction(emoji)
-                    except: pass
+            if _mode == "create":
+                for emoji in feed.reactions.split(','):
+                    if emoji:
+                        try: await sent.add_reaction(emoji)
+                        except: pass
+            return True
         elif emoji == "<:no:808045512393621585>":
             embed = discord.Embed(color=discord.Color(int(feed.feed_color, 16)))
             embed.set_author(icon_url=ctx.guild.icon_url, name="Creating new feedback... (2/3)")
@@ -1204,6 +1184,48 @@ async def create_feedback(ctx, feed):
             else:
                 embed.description += "\n\n**Type out your feedback below.**"
             await message.edit(content="", embed=embed)
+
+async def show_feedback(ctx, feed, feedback):
+    label = feedback.label
+    if label:
+        color = discord.Color(int(label.label_color, 16))
+        title = f"#{feedback.feedback_id} | {feed.feed_name} ({label.label_name})"
+    else:
+        color = discord.Color(int(feed.feed_color, 16))
+        title = f"#{feedback.feedback_id} | {feed.feed_name}"
+
+    embed = discord.Embed(color=color, title=title, description=feedback.feedback_desc)
+    author = ctx.guild.get_member(feedback.feedback_author)
+    if author: embed.set_author(icon_url=author.avatar_url, name=str(author))
+    else: embed.set_author(name="⚠️ The author has left the server")
+    embed.add_field(name='Author', value=feedback.feedback_author)
+    embed.add_field(name='Feed', value=feed.feed_name)
+    embed.add_field(name='Label', value=label.label_name if label else "None")
+
+    message = None
+    channel = ctx.guild.get_channel(feedback.channel_id)
+    if channel: message = await channel.fetch_message(feedback.message_id)
+
+    if feed.reactions:
+        if message:
+            emojis = feed.reactions.split(',')
+            reactions = dict()
+            for emoji in emojis:
+                reactions[emoji] = 0
+            for reaction in message.reactions:
+                emoji = str(reaction.emoji)
+                if emoji in emojis:
+                    if ctx.bot.user in (await reaction.users().flatten()): reactions[emoji] = reaction.count - 1
+                    else: reactions[emoji] = reaction.count
+            embed.add_field(name='Reactions', value=", ".join([f'{k} **{v}**' for k, v in reactions.items()]), inline=False)
+        else:
+            embed.add_field(name='Reactions', value="Could no longer find message", inline=False)
+
+    if message: embed.add_field(name='‏', value=f"[[Jump to message]]({message.jump_url})", inline=False)
+    if feedback.feedback_desc_url: embed.set_image(url=feedback.feedback_desc_url)
+    await ctx.send(embed=embed)
+async def create_feedback(ctx, feed):
+    await _build_feedback(ctx, feed)
 async def delete_feedback(ctx, feed, feedback):
     embed = discord.Embed(color=discord.Color.gold())
     name = f"{feed.feed_name} #{feedback.feedback_id}"
@@ -1224,3 +1246,8 @@ async def delete_feedback(ctx, feed, feedback):
         embed = discord.Embed(color=discord.Color(7844437))
         embed.set_author(name=f"Feedback \"{name}\" deleted", icon_url="https://cdn.discordapp.com/emojis/809149148356018256.png")
         await ctx.send(embed=embed)
+async def edit_feedback(ctx, feed, feedback):
+    await _build_feedback(ctx, feed, feedback)
+    feedback = models.Feedback(options={'feed_id': feedback.feed_id, 'feedback_id': feedback.feedback_id})
+    feedback.creation_channel_id = 0
+    feedback.save()

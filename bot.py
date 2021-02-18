@@ -1,4 +1,4 @@
-# RCON for games running on the OWI core, accessed through Discord, by timraay
+# FeedbackBot by timraay
 
 import discord
 from discord.ext import commands
