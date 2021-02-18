@@ -53,6 +53,9 @@ triggers
 |                           COMMANDS                            |
 +---------------------------------------------------------------+
 
+f!help [topic]
+f!new <feed>
+
 f!feeds
 f!feeds create
 f!feeds <feed>
@@ -72,7 +75,6 @@ f!feeds <feed> labels <label> shortname [new_value..]
 f!feeds <feed> labels <label> desc [new_value..]
 f!feeds <feed> labels <label> color [new_value]
 f!feeds <feed> labels <label> emoji [new_value]
-f!feeds <feed> triggers
 
 f!triggers
 f!triggers create
@@ -82,10 +84,13 @@ f!triggers <trigger> feed <value>
 f!triggers <trigger> emoji <value>
 f!triggers <trigger> message <value>
 
-f!new <feed>
 f!feedback <feed_id> <feedback_id>
 f!export (csv|json)
 
+f!config [option] [value]
+
+f!invite
+f!ping
 
 +---------------------------------------------------------------+
 |                             TO-DO                             |
