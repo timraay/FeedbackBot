@@ -2,6 +2,59 @@ import sqlite3
 db = sqlite3.connect('feedback.db')
 cur = db.cursor()
 
+cur.execute("""CREATE TABLE IF NOT EXISTS "feedback" (
+	"feed_id"	INTEGER,
+	"label_id"	INTEGER,
+	"feedback_id"	INTEGER,
+	"feedback_author"	INTEGER,
+	"feedback_desc"	TEXT,
+	"feedback_desc_url"	TEXT,
+	"finished"	INTEGER,
+	"channel_id"	INTEGER,
+	"message_id"	INTEGER
+)""")
+cur.execute("""CREATE TABLE IF NOT EXISTS "feeds" (
+	"guild_id"	INTEGER,
+	"feed_id"	INTEGER,
+	"feed_name"	TEXT,
+	"feed_shortname"	TEXT,
+	"feed_color"	TEXT,
+	"feed_desc"	TEXT,
+	"feed_desc_url"	TEXT,
+	"feed_channel_id"	INTEGER,
+	"anonymous"	INTEGER DEFAULT 0,
+	"reactions"	TEXT,
+	PRIMARY KEY("feed_id")
+)""")
+cur.execute("""CREATE TABLE IF NOT EXISTS "guilds" (
+	"guild_id"	INTEGER,
+	"command_prefix"	TEXT DEFAULT 'f!',
+	"admin_role"	INTEGER DEFAULT 0,
+	"mod_role"	INTEGER DEFAULT 0,
+	PRIMARY KEY("guild_id")
+)""")
+cur.execute("""CREATE TABLE IF NOT EXISTS "labels" (
+	"feed_id"	INTEGER,
+	"label_id"	INTEGER,
+	"label_name"	TEXT,
+	"label_shortname"	TEXT,
+	"label_color"	TEXT,
+	"label_desc"	TEXT,
+	"label_desc_url"	TEXT,
+	"label_emoji"	TEXT,
+	PRIMARY KEY("label_id")
+)""")
+cur.execute("""CREATE TABLE IF NOT EXISTS "triggers" (
+	"guild_id"	INTEGER,
+	"feed_id"	INTEGER,
+	"trigger_id"	INTEGER,
+	"trigger_emoji"	TEXT,
+	"trigger_channel_id"	INTEGER,
+	"trigger_message_id"	INTEGER,
+	PRIMARY KEY("trigger_id")
+)""")
+db.commit()
+
 from discord.ext.commands import has_role, has_any_role, check, CheckFailure
 
 class Guild():
