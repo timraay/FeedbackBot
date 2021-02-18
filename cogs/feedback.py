@@ -18,9 +18,9 @@ class feedback(commands.Cog):
             csv = "Feed,Label,ID,Author,Message,Media"
             all_feedback = models.Guild(ctx.guild.id).feedback
             for feedback in all_feedback:
-                feed = models.Feed('feed_id', feedback.feed_id)
+                feed = models.Feed(options={'feed_id': feedback.feed_id})
                 feed_name = feed.feed_name.replace(",", "\\,")
-                label_name = models.Label('label_id', feedback.label_id).label_name.replace(",", "\\,") if feedback.label_id else ''
+                label_name = models.Label(options={'label_id': feedback.label_id}).label_name.replace(",", "\\,") if feedback.label_id else ''
                 user = self.bot.get_user(feedback.feedback_author)
                 author = str(user).replace(",", "\\,") if user else str(feedback.feedback_author)
                 desc = feedback.feedback_desc.replace(',', '\\,').replace('\n', '\\n')
@@ -87,7 +87,7 @@ class feedback(commands.Cog):
     @commands.group(invoke_without_command=True, aliases=['fb'])
     async def feedback(self, ctx, feed_shortname, feedback_id: int, action: str = None):
         feed = models.Feed.find(ctx.guild.id, feed_shortname)
-        feedback = models.Feedback(feed.feed_id, 'feedback_id', feedback_id)
+        feedback = models.Feedback(options={'feed_id': feed.feed_id, 'feedback_id': feedback_id})
         if not action:
             await cmd.show_feedback(ctx, feed, feedback)
         elif action.lower() in ["delete", "remove"]:
@@ -119,6 +119,13 @@ class feedback(commands.Cog):
         except models.NotFound: pass
         else: feedback.delete()
 
+    
+    @commands.Cog.listener()
+    async def on_guild_channel_delete(self, channel):
+        try: feedback = models.Feedback(options={'creation_channel_id': channel.id, 'finished': 0})
+        except models.NotFound: pass
+        else: feedback.delete()
+    
 
 def setup(bot):
     bot.add_cog(feedback(bot))

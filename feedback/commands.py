@@ -1084,7 +1084,7 @@ async def create_feedback(ctx, feed):
                 await message.remove_reaction(emoji, user)
                 if not user.bot and emoji in emojis:
                     res = emoji
-                    try: label = models.Label('label_emoji', emoji)
+                    try: label = models.Label(options={'label_emoji': emoji})
                     except models.NotFound: res = ""
         
         feedback.label_id = label.label_id
