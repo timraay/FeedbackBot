@@ -1,0 +1,97 @@
++---------------------------------------------------------------+
+|                          DATABASES                            |
++---------------------------------------------------------------+
+
+guilds
+- guild_id
+- command_prefix
+- admin_role
+- mod_role
+
+feeds
+- guild_id
+- feed_id
+- feed_name
+- feed_shortname
+- feed_color
+- feed_desc
+- feed_desc_url
+- feed_channel_id
+- anonymous
+
+labels
+- feed_id
+- label_id
+- label_name
+- label_shortname
+- label_color
+- label_desc
+- label_desc_url
+- label_emoji
+
+feedback
+- feed_id
+- label_id
+- feedback_id
+- feedback_author
+- feedback_desc
+- feedback_desc_url
+- finished
+- channel_id
+- message_id
+
+triggers
+- guild_id
+- feed_id
+- trigger_id
+- trigger_emoji
+- trigger_channel_id
+- trigger_message_id
+
+
++---------------------------------------------------------------+
+|                           COMMANDS                            |
++---------------------------------------------------------------+
+
+f!feeds
+f!feeds create
+f!feeds <feed>
+f!feeds <feed> delete
+f!feeds <feed> name [new_value..]
+f!feeds <feed> shortname [new_value..]
+f!feeds <feed> desc [new_value..]
+f!feeds <feed> color [new_value]
+f!feeds <feed> channel [new_value..]
+f!feeds <feed> anonymous [new_value]
+f!feeds <feed> labels
+f!feeds <feed> labels create
+f!feeds <feed> labels <label>
+f!feeds <feed> labels <label> delete
+f!feeds <feed> labels <label> name [new_value..]
+f!feeds <feed> labels <label> shortname [new_value..]
+f!feeds <feed> labels <label> desc [new_value..]
+f!feeds <feed> labels <label> color [new_value]
+f!feeds <feed> labels <label> emoji [new_value]
+f!feeds <feed> triggers
+
+f!triggers
+f!triggers create
+f!triggers <trigger>
+f!triggers <trigger> delete
+f!triggers <trigger> feed <value>
+f!triggers <trigger> emoji <value>
+f!triggers <trigger> message <value>
+
+f!new <feed>
+f!feedback <feed_id> <feedback_id>
+f!export (csv|json)
+
+
++---------------------------------------------------------------+
+|                             TO-DO                             |
++---------------------------------------------------------------+
+
+- Give ability to edit or delete feedback by adding a reaction
+- Cache creation channels
+- Separate desc and desc_url
+- Add webhook?
