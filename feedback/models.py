@@ -11,7 +11,8 @@ cur.execute("""CREATE TABLE IF NOT EXISTS "feedback" (
 	"feedback_desc_url"	TEXT,
 	"finished"	INTEGER,
 	"channel_id"	INTEGER,
-	"message_id"	INTEGER
+	"message_id"	INTEGER,
+	"creation_channel_id"	INTEGER
 )""")
 cur.execute("""CREATE TABLE IF NOT EXISTS "feeds" (
 	"guild_id"	INTEGER,
@@ -99,7 +100,6 @@ def has_perms(level=2):
         except CheckFailure:
             return False
     return check(predicate)
-
 
 class Feed():
     def __init__(self, key, value):
@@ -233,23 +233,24 @@ class Feedback():
         cur.execute(f"SELECT * FROM feedback WHERE feed_id = ? AND {key} = ?", (feed_id, value,))
         res = cur.fetchone()
         if not res: raise NotFound('Feedback %s does not match %s' % (key, value))
-        (self.feed_id, self.label_id, self.feedback_id, self.feedback_author, self.feedback_desc, self.feedback_desc_url, self.finished, self.channel_id, self.message_id) = res
+        (self.feed_id, self.label_id, self.feedback_id, self.feedback_author, self.feedback_desc,
+        self.feedback_desc_url, self.finished, self.channel_id, self.message_id, self.creation_channel_id) = res
 
     @classmethod
-    def create(cls, feed_id, label_id, feedback_author, feedback_desc, feedback_desc_url='', finished=1, channel_id=0, message_id=0):
+    def create(cls, feed_id, label_id, feedback_author, feedback_desc, feedback_desc_url='', finished=1, channel_id=0, message_id=0, creation_channel_id=0):
         cur.execute("SELECT MAX(feedback_id) FROM feedback WHERE feed_id = ?", (feed_id,))
         old_id = cur.fetchone()[0]
         feedback_id = old_id+1 if old_id else 1
-        cur.execute("INSERT INTO feedback VALUES (?,?,?,?,?,?,?,?,?)", (int(feed_id), int(label_id), int(feedback_id), int(feedback_author), str(feedback_desc), str(feedback_desc_url), int(finished), int(channel_id), int(message_id)))
+        cur.execute("INSERT INTO feedback VALUES (?,?,?,?,?,?,?,?,?,?)", (int(feed_id), int(label_id), int(feedback_id), int(feedback_author), str(feedback_desc), str(feedback_desc_url), int(finished), int(channel_id), int(message_id), int(creation_channel_id)))
         db.commit()
         return cls(feed_id, 'feedback_id', feedback_id)
     
     @classmethod
-    def new(cls, feed_id, feedback_author, label_id=None, feedback_desc=None, feedback_desc_url=None, finished=0, channel_id=None, message_id=None):
+    def new(cls, feed_id, feedback_author, creation_channel_id, label_id=None, feedback_desc=None, feedback_desc_url=None, finished=0, channel_id=None, message_id=None):
         cur.execute("SELECT MAX(feedback_id) FROM feedback WHERE feed_id = ?", (feed_id,))
         old_id = cur.fetchone()[0]
         feedback_id = old_id+1 if old_id else 1
-        cur.execute("INSERT INTO feedback VALUES (?,?,?,?,?,?,?,?,?)", (feed_id, label_id, feedback_id, feedback_author, feedback_desc, feedback_desc_url, int(finished), channel_id, message_id))
+        cur.execute("INSERT INTO feedback VALUES (?,?,?,?,?,?,?,?,?,?)", (feed_id, label_id, feedback_id, feedback_author, feedback_desc, feedback_desc_url, int(finished), channel_id, message_id, int(creation_channel_id)))
         db.commit()
         return cls(feed_id, 'feedback_id', feedback_id)
 
@@ -262,8 +263,10 @@ class Feedback():
 
     def save(self):
         cur.execute("""UPDATE feedback SET
-        label_id = ?, feedback_author = ?, feedback_desc = ?, feedback_desc_url = ?, finished = ?, channel_id = ?, message_id = ? WHERE feed_id = ? AND feedback_id = ?""",
-        (self.label_id, self.feedback_author, self.feedback_desc, self.feedback_desc_url, self.finished, self.channel_id, self.message_id, self.feed_id, self.feedback_id))
+        label_id = ?, feedback_author = ?, feedback_desc = ?, feedback_desc_url = ?, finished = ?,
+        channel_id = ?, message_id = ?, creation_channel_id = ? WHERE feed_id = ? AND feedback_id = ?""",
+        (self.label_id, self.feedback_author, self.feedback_desc, self.feedback_desc_url, self.finished,
+        self.channel_id, self.message_id, self.creation_channel_id, self.feed_id, self.feedback_id))
         db.commit()
 
     @property
@@ -282,8 +285,8 @@ def has_unfinished_feedback(guild_id, user_id):
     WHERE feed_id IN (SELECT feed_id FROM feeds WHERE guild_id = ?)
     AND feedback_author = ? AND finished = 0""", (guild_id, user_id))
     res = cur.fetchone()
-    if res: return res 
-    else: return None, None
+    if res: return Feedback(res[0], 'feedback_id', res[1])
+    else: return None
 def get_feedback_by_user_id(user_id):
     cur.execute("SELECT feed_id, feedback_id FROM feedback WHERE feedback_author = ? AND finished = 1", (user_id,))
     return [Feedback(feed_id, 'feedback_id', feedback_id) for feed_id, feedback_id in cur.fetchall()]

@@ -3,50 +3,51 @@
 +---------------------------------------------------------------+
 
 guilds
-- guild_id
-- command_prefix
-- admin_role
-- mod_role
+- guild_id              INT     PK
+- command_prefix        STR
+- admin_role            INT
+- mod_role              INT
 
 feeds
-- guild_id
-- feed_id
-- feed_name
-- feed_shortname
-- feed_color
-- feed_desc
-- feed_desc_url
-- feed_channel_id
-- anonymous
+- guild_id              INT
+- feed_id               INT     PK
+- feed_name             STR
+- feed_shortname        STR
+- feed_color            STR
+- feed_desc             STR
+- feed_desc_url         STR
+- feed_channel_id       INT
+- anonymous             INT
 
 labels
-- feed_id
-- label_id
-- label_name
-- label_shortname
-- label_color
-- label_desc
-- label_desc_url
-- label_emoji
+- feed_id               INT
+- label_id              INT     PK
+- label_name            STR
+- label_shortname       STR
+- label_color           STR
+- label_desc            STR
+- label_desc_url        STR
+- label_emoji           STR
 
 feedback
-- feed_id
-- label_id
-- feedback_id
-- feedback_author
-- feedback_desc
-- feedback_desc_url
-- finished
-- channel_id
-- message_id
+- feed_id               INT
+- label_id              INT
+- feedback_id           INT
+- feedback_author       INT
+- feedback_desc         STR
+- feedback_desc_url     STR
+- finished              INT
+- channel_id            INT
+- message_id            INT
+- creation_channel_id   INT
 
 triggers
-- guild_id
-- feed_id
-- trigger_id
-- trigger_emoji
-- trigger_channel_id
-- trigger_message_id
+- guild_id              INT
+- feed_id               INT
+- trigger_id            INT
+- trigger_emoji         STR
+- trigger_channel_id    INT
+- trigger_message_id    INT
 
 
 +---------------------------------------------------------------+

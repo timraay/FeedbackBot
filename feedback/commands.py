@@ -983,7 +983,6 @@ async def show_feedback(ctx, feed, feedback):
         title = f"#{feedback.feedback_id} | {feed.feed_name}"
 
     embed = discord.Embed(color=color, title=title, description=feedback.feedback_desc)
-    embed.set_footer(text="https://github.com/timraay/FeedbackBot")
     author = ctx.guild.get_member(feedback.feedback_author)
     if author: embed.set_author(icon_url=author.avatar_url, name=str(author))
     else: embed.set_author(name="⚠️ The author has left the server")
@@ -1019,23 +1018,14 @@ async def create_feedback(ctx, feed):
     if not feed_channel: raise CustomException("Can't create feedback!", "No channel to send feedback to was set")
 
     # Is user already creating feedback?
-    feed_id, feedback_id = models.has_unfinished_feedback(ctx.guild.id, ctx.author.id)
-    if feedback_id:
-        embed = discord.Embed(color=discord.Color.from_rgb(221, 46, 68))
-        embed.set_author(icon_url='https://cdn.discordapp.com/emojis/808045512393621585.png', name="Can't create feedback!")
-        embed.description = f"{ctx.author.mention}, you are already creating feedback in another channel, finish it or close the channel first. If for whatever reason you are unable to, you can also react below."
-        embed.set_footer(text="This message will delete itself after 30 seconds.")
-        options = {
-            "🗑️": "Delete the feedback"
-        }
-        res = await ask_reaction(ctx, embed=embed, options=options, timeout=30.0, delete_after=True)
-        if res:
-            feedback = models.Feedback(feed_id, 'feedback_id', feedback_id)
-            if feedback.finished:
-                raise CustomException("You already finished your feedback!", "I'm not gonna delete it now. Sorry bro.")
+    feedback = models.has_unfinished_feedback(ctx.guild.id, ctx.author.id)
+    if feedback:
+        channel = ctx.guild.get_channel(feedback.creation_channel_id)
+        if not channel:
             feedback.delete()
-        return
-            
+        else:
+            await channel.send(f"{ctx.author.mention}, finish or close this first before attempting to create more!")
+            return            
 
     # Create channel
     overwrites = {
@@ -1054,7 +1044,7 @@ async def create_feedback(ctx, feed):
     try: channel = await feed_channel.category.create_text_channel(f"{feed.feed_name} {ctx.author.name}", overwrites=overwrites)
     except: raise CustomException("I don't have permission!", "Contact a server admin to give me Manage Channels and Manage Roles perms.")
     message = await channel.send(f"{ctx.author.mention} create your feedback here!")
-    feedback = models.Feedback.new(feed_id=feed.feed_id, feedback_author=ctx.author.id)
+    feedback = models.Feedback.new(feed_id=feed.feed_id, feedback_author=ctx.author.id, creation_channel_id=channel.id)
 
     ### LABEL
 
