@@ -1180,7 +1180,7 @@ async def create_feedback(ctx, feed):
         
         await message.clear_reactions()
         if emoji == "<:yes:809149148356018256>":
-            embed.footer = discord.Embed.Empty
+            embed.set_footer()
             sent = await feed_channel.send(embed=embed)
             
             feedback.finished = 1
