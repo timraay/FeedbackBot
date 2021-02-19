@@ -690,10 +690,10 @@ async def set_feed_color(ctx, feed, value):
     await ctx.send(embed=embed)
 async def set_feed_channel(ctx, feed, value):
     converter = commands.TextChannelConverter()
-    try: channel = await converter.convert(ctx, value)
+    try: channel = await converter.convert(ctx, str(value))
     except commands.BadArgument as e: raise CustomException("Invalid channel!", str(e))
 
-    try: old_channel = (await converter.convert(ctx, feed.feed_channel_id)).mention
+    try: old_channel = (await converter.convert(ctx, str(feed.feed_channel_id))).mention
     except commands.BadArgument: old_channel = "No channel"
 
     embed = discord.Embed(color=discord.Color(7844437))
@@ -702,7 +702,7 @@ async def set_feed_channel(ctx, feed, value):
     embed.add_field(name="Old value", value=old_channel)
     embed.add_field(name="New value", value=channel.mention)
     
-    feed.feed_channel = channel.id
+    feed.feed_channel_id = channel.id
     feed.save()
     
     await ctx.send(embed=embed)
@@ -739,7 +739,7 @@ async def set_feed_reactions(ctx, feed, value):
     if value: embed.set_author(name="Feed reactions updated", icon_url="https://cdn.discordapp.com/emojis/809149148356018256.png")
     else: embed.set_author(name="Feed will now no longer show reactions", icon_url="https://cdn.discordapp.com/emojis/809149148356018256.png")
     embed.add_field(name="Old value", value=feed.reactions if feed.reactions else 'None')
-    embed.add_field(name="New value", value=value)
+    embed.add_field(name="New value", value=value if value else 'None')
 
     feed.reactions = value
     feed.save()
@@ -1129,7 +1129,7 @@ async def _build_feedback(ctx, feed, feedback=None):
         embed.set_footer(text="https://github.com/timraay/FeedbackBot")
         if feedback.feedback_desc_url: embed.set_image(url=feedback.feedback_desc_url)
         if not feed.anonymous: embed.set_author(icon_url=ctx.author.avatar_url, name=str(ctx.author))
-        message = await channel.send(f"Confirm that this is what you want your feedback to look like before sending. ({'3/3' if label else '2/2'})\nReact with <:yes:809149148356018256> to send your feedback, or <:no:808045512393621585> to edit it.", embed=embed)
+        message = await channel.send(f"Confirm that this is what you want your feedback to look like before sending. ({'3/3' if label else '2/2'})\nReact with <:yes:809149148356018256> to send your feedback, or <:no:808045512393621585> to edit it. Once sent, you can edit it with ✍️ or delete it with 🗑️ by adding the emoji as reaction.", embed=embed)
         
         emojis = ["<:yes:809149148356018256>", "<:no:808045512393621585>"]
         for emoji in emojis:
@@ -1208,15 +1208,11 @@ async def show_feedback(ctx, feed, feedback):
 
     if feed.reactions:
         if message:
-            emojis = feed.reactions.split(',')
             reactions = dict()
-            for emoji in emojis:
-                reactions[emoji] = 0
             for reaction in message.reactions:
                 emoji = str(reaction.emoji)
-                if emoji in emojis:
-                    if ctx.bot.user in (await reaction.users().flatten()): reactions[emoji] = reaction.count - 1
-                    else: reactions[emoji] = reaction.count
+                if ctx.bot.user in (await reaction.users().flatten()): reactions[emoji] = reaction.count - 1
+                else: reactions[emoji] = reaction.count
             embed.add_field(name='Reactions', value=", ".join([f'{k} **{v}**' for k, v in reactions.items()]), inline=False)
         else:
             embed.add_field(name='Reactions', value="Could no longer find message", inline=False)

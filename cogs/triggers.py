@@ -56,9 +56,9 @@ class triggers(commands.Cog):
         
         trigger = None
         feedback = None
-        try: trigger = models.Trigger(options={'message_id': payload.message_id, 'trigger_emoji': str(payload.emoji)})
+        try: feedback = models.Feedback(options={'message_id': payload.message_id})
         except:
-            try: feedback = models.Feedback(options={'message_id': payload.message_id})
+            try: trigger = models.Trigger(options={'message_id': payload.message_id, 'trigger_emoji': str(payload.emoji)})
             except: pass
         
         if feedback or trigger:
@@ -72,15 +72,21 @@ class triggers(commands.Cog):
         if feedback:
             feed = feedback.feed
             emojis = feed.reactions.split(',')
-            if str(payload.emoji) not in emojis:
-                await message.remove_reaction(payload.emoji, payload.member)
+                
             if str(payload.emoji) == "✍️":
+                await message.remove_reaction(payload.emoji, payload.member)
                 if payload.member.id == feedback.feedback_author or await models.has_perms(level=1).predicate(ctx):
                     await cmd.edit_feedback(ctx, feed, feedback)
             elif str(payload.emoji) == "🗑️":
+                await message.remove_reaction(payload.emoji, payload.member)
                 if payload.member.id == feedback.feedback_author or await models.has_perms(level=1).predicate(ctx):
                     feedback.delete()
                     await message.delete()
+            elif feed.reactions and str(payload.emoji) not in emojis:
+                for reaction in message.reactions:
+                    if reaction.emoji == payload.emoji and reaction.count == 1:
+                        if not await models.has_perms(level=1).predicate(ctx):
+                            await message.clear_reaction(reaction.emoji)
 
         elif trigger:
             feed = trigger.feed

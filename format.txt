@@ -97,7 +97,7 @@ f!ping
 |                             TO-DO                             |
 +---------------------------------------------------------------+
 
-- Give ability to edit or delete feedback by adding a reaction
-- Cache creation channels
+- Add proper feedback filters
+- Add a way to cancel feed/label/trigger creation
 - Separate desc and desc_url
 - Add webhook?
