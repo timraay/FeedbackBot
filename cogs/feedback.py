@@ -84,42 +84,67 @@ class feedback(commands.Cog):
         await ctx.send(embed=embed, file=f)
 
     @models.has_perms(level=1)
-    @commands.group(invoke_without_command=True, aliases=['fb'])
-    async def feedback(self, ctx, feed_shortname, feedback_id: int, action: str = None):
-        feed = models.Feed.find(ctx.guild.id, feed_shortname)
-        feedback = models.Feedback(options={'feed_id': feed.feed_id, 'feedback_id': feedback_id})
-        if not action:
-            await cmd.show_feedback(ctx, feed, feedback)
-        elif action.lower() in ["delete", "remove"]:
-            await cmd.delete_feedback(ctx, feed, feedback)
-    
-    @models.has_perms(level=1)
-    @feedback.command()
-    async def user(self, ctx, user: discord.User):
-        feedbacks = models.get_feedback_by_user_id(user.id)
-        embed = discord.Embed()
-        if feedbacks:
-            embed.title = f"{user.name} has {str(len(feedbacks))} messages."
-            embed.description = ""
-            for feedback in feedbacks:
-                try: message = await commands.MessageConverter().convert(ctx, f'{feedback.channel_id}-{feedback.message_id}')
-                except commands.BadArgument: message = None
-                if message: jump = f"[Jump to message]({message.jump_url})"
-                else: jump = "No message ⚠️"
-                label = feedback.label
-                embed.description += f"**#{feedback.feedback_id}** | {feedback.feed.feed_name}{f' ({label.label_name})' if label else ''} - {jump}\n"
-        else:
-            raise CustomException(f"{user.name} doesn't have any feedback yet!", "")
+    @commands.command(aliases=['fb'])
+    async def feedback(self, ctx, *args):
 
-        await ctx.send(embed=embed)
-    
+        all_filters = ['user', 'feed', 'label']
+        if not args:
+            feedbacks = models.get_feedback(options={})
+            await cmd.list_feedback(ctx, feedbacks)
+        elif args[0] in all_filters:
+            options = dict()
+            args = list(args)
+            while args:
+                key = args.pop(0).lower()
+                if not args: raise CustomException('Missing required argument!', 'Expected value after "%s"' % key)
+                elif key not in all_filters: raise CustomException('Invalid argument!', '"%s" is not a valid filter' % key)
+                value = args.pop(0)
+
+                if key == "user":
+                    feedback_author = (await commands.MemberConverter().convert(ctx, value)).id
+                    options['feedback_author'] = feedback_author
+                elif key == "feed":
+                    feed_id = models.Feed.find(ctx.guild.id, value).feed_id
+                    options['feed_id'] = feed_id
+                elif key == "label":
+                    label_id = 0
+                    err = None
+                    for feed in models.Guild(ctx.guild.id).feeds:
+                        try:
+                            label_id = models.Label.find(feed, value)
+                            label_id = label_id.label_id
+                        except models.NotFound as e: err = e
+                        else: break
+                    if not label_id and err:
+                        raise err
+                    options['label_id'] = label_id
+            
+            feedbacks = models.get_feedback(options=options)
+            await cmd.list_feedback(ctx, feedbacks)
+            
+        else:
+            if len(args) < 2:
+                raise CustomException('Missing required argument!', 'feedback_id is a required argument that is missing')
+            
+            try: feedback_id = int(args[1])
+            except ValueError: raise CustomException('Invalid feedback id!', '%s isn\'t an integer' % feedback_id)
+            
+            feed = models.Feed.find(ctx.guild.id, args[0])
+            feedback = models.Feedback(options={'feed_id': feed.feed_id, 'feedback_id': feedback_id})
+            action = '' if len(args) < 3 else args[2]
+            if not action:
+                await cmd.show_feedback(ctx, feed, feedback)
+            elif action.lower() in ["delete", "remove"]:
+                await cmd.delete_feedback(ctx, feed, feedback)
+        
+   
     @commands.Cog.listener()
     async def on_raw_message_delete(self, payload):
         try: feedback = models.Feedback.find(payload.channel_id, payload.message_id)
         except models.NotFound: pass
         else: feedback.delete()
 
-    
+
     @commands.Cog.listener()
     async def on_guild_channel_delete(self, channel):
         try: feedback = models.Feedback(options={'creation_channel_id': channel.id, 'finished': 0})

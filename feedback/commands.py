@@ -1247,3 +1247,58 @@ async def edit_feedback(ctx, feed, feedback):
     feedback = models.Feedback(options={'feed_id': feedback.feed_id, 'feedback_id': feedback.feedback_id})
     feedback.creation_channel_id = 0
     feedback.save()
+async def list_feedback(ctx, feedbacks):
+    if not feedbacks:
+        await ctx.send(embed=discord.Embed(title="No feedback was found!"))
+        return
+    
+    from math import ceil
+    from asyncio import TimeoutError
+
+    feeds = models.Guild(ctx.guild.id).feeds
+    embed = discord.Embed()
+    embed.description = "Wait for it..."
+    page = 1
+    max_pages = ceil(len(feedbacks)/30)
+    emojis = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣', '🔟'][slice(0, max_pages)]
+    msg = await ctx.send(embed=embed)
+    for emoji in emojis:
+        await msg.add_reaction(emoji)
+    
+    while True:
+        _from = (page-1)*30
+        _till = _from+30 if _from+30 <= len(feedbacks) else len(feedbacks)
+        embed.title = f"Showing feedback {_from+1}-{_till} out of {len(feedbacks)} results"
+        embed.description = "Wait for it..."
+        embed.set_footer(text=f"Page {page}/{max_pages if max_pages <= 10 else f'10 (+{max_pages-10})'} - react below to cycle pages")
+        await msg.edit(embed=embed)
+        lines = []
+        for feedback in feedbacks[slice(_from, _till)]:
+            try: message = await commands.MessageConverter().convert(ctx, f'{feedback.channel_id}-{feedback.message_id}')
+            except commands.BadArgument: message = None
+            if message: jump = f"[Jump to message]({message.jump_url})"
+            else: jump = "No message ⚠️"
+            try: author = ctx.bot.get_user(feedback.feedback_author).mention
+            except: author = str(feedback.feedback_author)
+            feed = [feed for feed in feeds if feed.feed_id == feedback.feed_id]
+            label = feedback.label if feedback.label_id else None
+            lines.append(f"**#{feedback.feedback_id}** | {feedback.feed.feed_name}{f' ({label.label_name})' if label else ''} by {author} - {jump}")
+        embed.description = "\n".join(lines)
+        await msg.edit(embed=embed)
+
+        def check(reaction, user):
+            return reaction.message == msg and not user.bot
+
+        try:
+            while True:
+                reaction, user = await ctx.bot.wait_for('reaction_add', check=check, timeout=300.0)
+                await msg.remove_reaction(reaction.emoji, user)
+                if str(reaction.emoji) in emojis:
+                    new_page = emojis.index(str(reaction.emoji))+1
+                    if new_page != page:
+                        page = new_page
+                        break
+        except TimeoutError:
+            await msg.clear_reactions()
+            embed.set_footer(text=f"Page {page}/{max_pages if max_pages <= 10 else f'10 (+{max_pages-10})'} - execute the command again to cycle pages")
+            break

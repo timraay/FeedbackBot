@@ -297,8 +297,13 @@ def is_creating_feedback(guild_id, user_id):
     res = cur.fetchone()
     if res: return Feedback(options={'feed_id': res[0], 'feedback_id': res[1]})
     else: return None
-def get_feedback_by_user_id(user_id):
-    cur.execute("SELECT feed_id, feedback_id FROM feedback WHERE feedback_author = ? AND finished = 1", (user_id,))
+def get_feedback(options={}):
+    query = "SELECT feed_id, feedback_id FROM feedback"
+    values = tuple()
+    if options:
+        query = query + " WHERE " + " AND ".join([f"{key} = ?" for key in options.keys()])
+        values = tuple([value for value in options.values()])
+    cur.execute(query, values)
     return [Feedback(options={'feed_id': feed_id, 'feedback_id': feedback_id}) for feed_id, feedback_id in cur.fetchall()]
 
 class Trigger():

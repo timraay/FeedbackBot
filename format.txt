@@ -86,6 +86,7 @@ f!triggers <trigger> emoji <value>
 f!triggers <trigger> message <value>
 
 f!feedback <feed_id> <feedback_id>
+f!feedback [user <user>] [feed <feed>] [label <label>]
 f!export (csv|json)
 
 f!config [option] [value]
