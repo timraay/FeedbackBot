@@ -89,8 +89,10 @@ async def create_feed(ctx):
     embed = discord.Embed(color=discord.Color.from_rgb(122, 255, 149))
     embed.set_author(name="Creating new feed... (1/7)")
     embed.add_field(name="What should the feed's name be?", value="Keep it short. 20 characters max.")
+    embed.set_footer(text="Type \"cancel\" to cancel the creation process")
     feed_name = await ask_message(ctx, embed=embed)
     if feed_name == None: return
+    elif feed_name.lower() == "cancel": return
     def validate_name():
         if len(feed_name) < 1 or len(feed_name) > 20: return f"Invalid length! 20 characters max, you have {len(feed_name)}."
         else: return None
@@ -100,14 +102,17 @@ async def create_feed(ctx):
         embed.set_author(name=error)
         feed_name = await ask_message(ctx, embed)
         if feed_name == None: return
+        elif feed_name.lower() == "cancel": return
         error = validate_name()
     
     # feed_shortname
     embed = discord.Embed(color=discord.Color.from_rgb(122, 255, 149))
     embed.set_author(name="Creating new feed... (2/7)")
     embed.add_field(name="What should the feed's short name be?", value="This will be used to reference to it using commands. You may only use lowercase characters, digits, underscores and dashes. No spaces.")
+    embed.set_footer(text="Type \"cancel\" to cancel the creation process")
     feed_shortname = await ask_message(ctx, embed=embed)
     if feed_shortname == None: return
+    elif feed_name.lower() == "cancel": return
     def validate_shortname():
         if len(feed_shortname) < 1 or len(feed_shortname) > 20: return f"Invalid length! 20 characters max, you have {len(feed_shortname)}."
         if not re.match(r"[a-z0-9_-]+$", feed_shortname): return "Invalid character(s)! You can only use [a-z0-9_-]."
@@ -124,14 +129,17 @@ async def create_feed(ctx):
         embed.set_author(name=error)
         feed_shortname = await ask_message(ctx, embed)
         if feed_shortname == None: return
+        elif feed_shortname.lower() == "cancel": return
         error = validate_shortname()
 
     # feed_desc
     embed = discord.Embed(color=discord.Color.from_rgb(122, 255, 149))
     embed.set_author(name="Creating new feed... (3/7)")
     embed.add_field(name="What description should the feed have?", value="This will be shown to anyone trying to create feedback for this feed.")
+    embed.set_footer(text="Type \"cancel\" to cancel the creation process")
     feed_desc, feed_desc_url = await ask_message(ctx, embed=embed, allow_image=True)
     if feed_desc == None: return
+    elif feed_desc.lower() == "cancel": return
     def validate_desc():
         if len(feed_desc) > 1500: return f"Invalid length! 1500 characters max, you have {len(feed_desc)}."
         return None
@@ -141,6 +149,7 @@ async def create_feed(ctx):
         embed.set_author(name=error)
         feed_desc, feed_desc_url = await ask_message(ctx, embed, allow_image=True)
         if feed_desc == None: return
+        elif feed_desc.lower() == "cancel": return
         error = validate_desc()
     if not feed_desc_url: feed_desc_url = ""
 
@@ -148,8 +157,10 @@ async def create_feed(ctx):
     embed = discord.Embed(color=discord.Color.from_rgb(122, 255, 149))
     embed.set_author(name="Creating new feed... (4/7)")
     embed.add_field(name="What channel should the feed be linked to?", value="Here any new feedback will be sent.")
+    embed.set_footer(text="Type \"cancel\" to cancel the creation process")
     feed_channel_id = await ask_message(ctx, embed=embed)
     if feed_channel_id == None: return
+    elif feed_channel_id.lower() == "cancel": return
     try: feed_channel_id = (await commands.TextChannelConverter().convert(ctx, feed_channel_id)).id
     except commands.BadArgument as e: error = str(e)
     else: error = None
@@ -158,6 +169,7 @@ async def create_feed(ctx):
         embed.set_author(name=error)
         feed_channel_id = await ask_message(ctx, embed)
         if feed_channel_id == None: return
+        elif feed_channel_id.lower() == "cancel": return
         try: feed_channel_id = (await commands.TextChannelConverter().convert(ctx, feed_channel_id)).id
         except commands.BadArgument as e: error = str(e)
         else: error = None
@@ -166,8 +178,10 @@ async def create_feed(ctx):
     embed = discord.Embed(color=discord.Color.from_rgb(122, 255, 149))
     embed.set_author(name="Creating new feed... (5/7)")
     embed.add_field(name="What should the feed's color be?", value="This will be the default color any feedback on this feed will have. You need to pick one of the presets, type [a color hex code](https://htmlcolorcodes.com/color-picker/) (eg. #71e30a), or type \"default\" for no color.\n\nAvailable presets:\nteal, dark_teal, green, dark_green, blue, dark_blue, purple, dark_purple, magenta, dark_magenta, yellow, dark_yellow, gold, dark_gold, orange, dark_orange, red, dark_red, lighter_gray, light_gray, dark_gray, darker_gray, blurple, grayple, white, black")
+    embed.set_footer(text="Type \"cancel\" to cancel the creation process")
     feed_color = await ask_message(ctx, embed=embed)
     if feed_color == None: return
+    elif feed_color.lower() == "cancel": return
     def validate_color(feed_color):
         feed_color = feed_color.lower()
         if feed_color == "teal": feed_color = "#1abc9c"
@@ -210,6 +224,7 @@ async def create_feed(ctx):
         embed.set_author(name=error)
         feed_color = await ask_message(ctx, embed)
         if feed_color == None: return
+        elif feed_color.lower() == "cancel": return
         error, feed_color = validate_color(feed_color)
     
     # anonymous
@@ -229,7 +244,7 @@ async def create_feed(ctx):
         embed.set_author(name="Didn't recognize response. Please try again.")
         feed_anonymous = await ask_message(ctx, embed)
         if feed_anonymous == None: return
-        elif feed_anonymous == "<:yes:809149148356018256>": feed_anonymous == 1
+        elif feed_anonymous == "<:yes:809149148356018256>": feed_anonymous = 1
         elif feed_anonymous == "<:no:808045512393621585>": feed_anonymous = 0
         else: raise CustomException("An unexpected error occured!", f"Emoji \"{feed_anonymous}\" was not recognized twice.")
     
@@ -237,8 +252,10 @@ async def create_feed(ctx):
     embed = discord.Embed(color=discord.Color.from_rgb(122, 255, 149))
     embed.set_author(name="Creating new feed... (7/7)")
     embed.add_field(name="Should feedback sent to the feed have reactions?", value="Type a list of emojis separated by a comma. When using custom emojis the bot must be in the server it is from. For no reactions type \"none\".")
+    embed.set_footer(text="Type \"cancel\" to cancel the creation process")
     feed_reactions = await ask_message(ctx, embed=embed)
     if feed_reactions == None: return
+    elif feed_reactions.lower() == "cancel": return
     async def validate_reactions(feed_reactions):
         if feed_reactions.lower() == "none":
             return None, ""
@@ -258,6 +275,7 @@ async def create_feed(ctx):
         embed.set_author(name=error)
         feed_reactions = await ask_message(ctx, embed)
         if feed_reactions == None: return
+        elif feed_reactions.lower() == "cancel": return
         error, feed_reactions = await validate_reactions(feed_reactions)
     
 
@@ -278,8 +296,10 @@ async def create_label(ctx, feed):
     embed = discord.Embed(color=discord.Color.from_rgb(122, 255, 149))
     embed.set_author(name="Creating new label... (1/5)")
     embed.add_field(name="What should the label's name be?", value="Keep it short. 20 characters max.")
+    embed.set_footer(text="Type \"cancel\" to cancel the creation process")
     label_name = await ask_message(ctx, embed=embed)
     if label_name == None: return
+    elif label_name.lower() == "cancel": return
     def validate_name():
         if len(label_name) < 1 or len(label_name) > 20: return f"Invalid length! 20 characters max, you have {len(label_name)}."
         else: return None
@@ -289,14 +309,17 @@ async def create_label(ctx, feed):
         embed.set_author(name=error)
         label_name = await ask_message(ctx, embed)
         if label_name == None: return
+        elif label_name.lower() == "cancel": return
         error = validate_name()
     
     # label_shortname
     embed = discord.Embed(color=discord.Color.from_rgb(122, 255, 149))
     embed.set_author(name="Creating new label... (2/5)")
     embed.add_field(name="What should the label's short name be?", value="This will be used to reference to it using commands. You may only use lowercase characters, digits, underscores and dashes. No spaces.")
+    embed.set_footer(text="Type \"cancel\" to cancel the creation process")
     label_shortname = await ask_message(ctx, embed=embed)
     if label_shortname == None: return
+    elif label_shortname.lower() == "cancel": return
     def validate_shortname():
         if len(label_shortname) < 1 or len(label_shortname) > 20: return f"Invalid length! 20 characters max, you have {len(label_shortname)}."
         if not re.match(r"[a-z0-9_-]+$", label_shortname): return "Invalid character(s)! You can only use [a-z0-9_-]."
@@ -313,14 +336,17 @@ async def create_label(ctx, feed):
         embed.set_author(name=error)
         label_shortname = await ask_message(ctx, embed)
         if label_shortname == None: return
+        elif label_shortname.lower() == "cancel": return
         error = validate_shortname()
 
     # label_desc
     embed = discord.Embed(color=discord.Color.from_rgb(122, 255, 149))
     embed.set_author(name="Creating new label... (3/5)")
     embed.add_field(name="What description should the label have?", value="This will be shown in addition to the feed's label once this label is selected. This will replace the feed's image, if any.")
+    embed.set_footer(text="Type \"cancel\" to cancel the creation process")
     label_desc, label_desc_url = await ask_message(ctx, embed=embed, allow_image=True)
     if label_desc == None: return
+    elif label_desc.lower() == "cancel": return
     def validate_desc():
         if len(label_desc) > 1500: return f"Invalid length! 1500 characters max, you have {len(label_desc)}."
         return None
@@ -330,6 +356,7 @@ async def create_label(ctx, feed):
         embed.set_author(name=error)
         label_desc, label_desc_url = await ask_message(ctx, embed, allow_image=True)
         if label_desc == None: return
+        elif label_desc.lower() == "cancel": return
         error = validate_desc()
     if not label_desc_url: label_desc_url = ""
     
@@ -337,8 +364,10 @@ async def create_label(ctx, feed):
     embed = discord.Embed(color=discord.Color.from_rgb(122, 255, 149))
     embed.set_author(name="Creating new label... (4/5)")
     embed.add_field(name="What should the label's color be?", value="This will be the color any feedback with this label will have. This will overwrite the feed's color, if any. You need to pick one of the presets, type [a color hex code](https://htmlcolorcodes.com/color-picker/) (eg. #71e30a), or type \"default\" for no color.\n\nAvailable presets:\nteal, dark_teal, green, dark_green, blue, dark_blue, purple, dark_purple, magenta, dark_magenta, yellow, dark_yellow, gold, dark_gold, orange, dark_orange, red, dark_red, lighter_gray, light_gray, dark_gray, darker_gray, blurple, grayple, white, black")
+    embed.set_footer(text="Type \"cancel\" to cancel the creation process")
     label_color = await ask_message(ctx, embed=embed)
     if label_color == None: return
+    elif label_color.lower() == "cancel": return
     def validate_color(label_color):
         label_color = label_color.lower()
         if label_color == "teal": label_color = "#1abc9c"
@@ -380,14 +409,17 @@ async def create_label(ctx, feed):
         embed.set_author(name=error)
         label_color = await ask_message(ctx, embed)
         if label_color == None: return
+        elif label_color.lower() == "cancel": return
         error, label_color = validate_color(label_color)
 
     # label_emoji
     embed = discord.Embed(color=discord.Color.from_rgb(122, 255, 149))
     embed.set_author(name="Creating new label... (5/5)")
     embed.add_field(name="What should the label's emoji be?", value="This is what references the label whenever the user needs to select a label for his feedback. When using a custom emoji, make sure it is from a server I am also in.")
+    embed.set_footer(text="Type \"cancel\" to cancel the creation process")
     label_emoji = await ask_message(ctx, embed=embed)
     if label_emoji == None: return
+    elif label_emoji.lower() == "cancel": return
     try: await ctx.message.add_reaction(label_emoji)
     except: error = "Couldn't use this as an emoji!"
     else: error = None
@@ -396,6 +428,7 @@ async def create_label(ctx, feed):
         embed.set_author(name=error)
         label_emoji = await ask_message(ctx, embed)
         if label_emoji == None: return
+        elif label_emoji.lower() == "cancel": return
         try: await ctx.message.add_reaction(label_emoji)
         except: error = "Couldn't use this as an emoji!"
         else: error = None
@@ -420,8 +453,10 @@ async def create_trigger(ctx):
     embed = discord.Embed(color=discord.Color.from_rgb(122, 255, 149))
     embed.set_author(name="Creating new trigger... (1/3)")
     embed.add_field(name="What feed should this trigger be linked to?", value=f"This is the feed feedback will be created in when triggered. Enter either a feed's short name or its index.\n\nAvailable feeds:\n{', '.join([feed.feed_shortname for feed in feeds])}")
+    embed.set_footer(text="Type \"cancel\" to cancel the creation process")
     feed_shortname = await ask_message(ctx, embed=embed)
     if feed_shortname == None: return
+    elif feed_shortname.lower() == "cancel": return
     def validate_feed():
         try: models.Feed.find(ctx.guild.id, feed_shortname)
         except models.NotFound: return "Couldn't find feed!"
@@ -432,6 +467,7 @@ async def create_trigger(ctx):
         embed.set_author(name=error)
         feed_shortname = await ask_message(ctx, embed)
         if feed_shortname == None: return
+        elif feed_shortname.lower() == "cancel": return
         error = validate_feed()
     feed_id = models.Feed.find(ctx.guild.id, feed_shortname).feed_id
     
@@ -439,8 +475,10 @@ async def create_trigger(ctx):
     embed = discord.Embed(color=discord.Color.from_rgb(122, 255, 149))
     embed.set_author(name="Creating new label... (2/3)")
     embed.add_field(name="What should the trigger's emoji be?", value="This is what will be used for the reaction under the trigger message. When using a custom emoji, make sure it is from a server I am also in.")
+    embed.set_footer(text="Type \"cancel\" to cancel the creation process")
     trigger_emoji = await ask_message(ctx, embed=embed)
     if trigger_emoji == None: return
+    elif trigger_emoji.lower() == "cancel": return
     try: await ctx.message.add_reaction(trigger_emoji)
     except: error = "Couldn't use this as an emoji!"
     else: error = None
@@ -449,6 +487,7 @@ async def create_trigger(ctx):
         embed.set_author(name=error)
         trigger_emoji = await ask_message(ctx, embed)
         if trigger_emoji == None: return
+        elif trigger_emoji.lower() == "cancel": return
         try: await ctx.message.add_reaction(trigger_emoji)
         except: error = "Couldn't use this as an emoji!"
         else: error = None
@@ -457,8 +496,10 @@ async def create_trigger(ctx):
     embed = discord.Embed(color=discord.Color.from_rgb(122, 255, 149))
     embed.set_author(name="Creating new label... (3/3)")
     embed.add_field(name="What message should the trigger be under?", value="This is the message that will have the reaction to trigger the trigger. Enter either the URL to a message, the channel and message ID with a dash inbetween (`<channel id>-<message id>`), or whenever it's in this channel just the message ID.")
+    embed.set_footer(text="Type \"cancel\" to cancel the creation process")
     trigger_message = await ask_message(ctx, embed=embed)
     if trigger_message == None: return
+    elif trigger_message.lower() == "cancel": return
     try:
         message = await commands.MessageConverter().convert(ctx, trigger_message)
         error = None
@@ -468,6 +509,7 @@ async def create_trigger(ctx):
         embed.set_author(name=error)
         trigger_message = await ask_message(ctx, embed)
         if trigger_message == None: return
+        elif trigger_message.lower() == "cancel": return
         try:
             message = await commands.MessageConverter().convert(ctx, trigger_message)
             error = None

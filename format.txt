@@ -98,7 +98,5 @@ f!ping
 |                             TO-DO                             |
 +---------------------------------------------------------------+
 
-- Add proper feedback filters
-- Add a way to cancel feed/label/trigger creation
 - Separate desc and desc_url
 - Add webhook?
