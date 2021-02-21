@@ -10,6 +10,9 @@ Invite it to your server by [clicking here](https://discord.com/api/oauth2/autho
 FeedbackBot has a GNU GPLv3 license. In short, you can obtain a copy of the source code, modify it, and even distribute it. When modifying the code though, you must keep the GNU GPLv3 license. Your software should also be marked as changed, with a reference to the original source code.
 
 # Preview
+
+> Note: All of these screenshots were taken during development and some small features and details might be outdated or missing. Nonetheless the images should give you a nice overview of what is all possible.
+
 <div style="text-align:center">
 With FeedbackBot you will be able to easily create feedback, whilst still making it look nice and clean. Embeds are used for that organized look, while users can still attach images and other files just fine.
 
@@ -30,7 +33,11 @@ Setting up a feed
 <img src="images/delete.png">
 
 Deleting the feed
-</i></div>
+
+</i>
+
+Reactions under feedback are controlled. You can submit a default set of reactions that is added to each feedback message once sent, and those are the only ones users will be able to react with. Moderators and admins will still be able to add new reactions for users to interact with. Additionally, authors (and moderators) can react to their feedback to either edit or delete it.
+</div>
 
 # Docs
 
@@ -39,8 +46,6 @@ FeedbackBot operates on a **guild**-wide basis. In case you didn't know, a guild
 For each feed, you can (but don't have to) create **labels**. Members can assign a pre-defined label to their feedback to further categorize it.
 
 And finally we have **triggers**. Triggers are reactions under a message which members may react with to start creating feedback for the feed it is bound to. This too is completely optional, but it is a lot cleaner than running a command.
-
-Now that you understand the basic terms, we can move on. Using the command `f!help [topic]` you can read more about specifics and how to set them up. Available topics are feeds, labels, triggers, feedback, permissions.
 
 ## Feeds
 
@@ -109,7 +114,7 @@ f!triggers <trigger> message [value]
 ```
 To delete a trigger, use `f!trigger <trigger> delete`.
 
-### Feedback
+## Feedback
 
 What feedback is and how to create it is all what your guild members will have to know, and it is your job to tell them. Using feed and label descriptions is a great way of giving the user some guidelines as to what to write, too.
 
@@ -117,19 +122,25 @@ What feedback is and how to create it is all what your guild members will have t
 
 Feedback can be created in two ways. Users can run the `f!new <feed>` command, or trigger a trigger. When triggered, a private channel is created in the same channel category the feed is in. If there are labels available, it will first prompt you to choose one. Once that's done, you can write your actual feedback in a single message, additionally including an attachment. Finally, it will show you what your feedback will look like and ask you to confirm before sending it. If you decline, you can type your message again. When the feedback is done the channel will be removed again.
 
+Users can only create (or edit) one feedback message at a time.
+
 ### Viewing feedback
 
-Feedback is sent to the feed's channel. Anyone with access to that channel can thus see the feedback message. Moderators however can also see a more detailed look of the feedback elsewhere using the `f!feedback <feed> <feedback>`, "feed" being the shortname or index of the feed and "feedback" being the ID each feedback gets (the number after the hashtag). Currently it is not possible to edit feedback. Alternatively, moderators can list all feedback sent by a specific user using the command `f!fb user <user>`.
+Feedback is sent to the feed's channel. Anyone with access to that channel can thus see the feedback message. Moderators however can also see a more detailed look of the feedback using the command `f!feedback <feed> <feedback>`, "feed" being the shortname or index of the feed and "feedback" being the ID each feedback gets (the number after the hashtag).
 
-### Deleting feedback
+Alternatively, moderators can list feedback as well using the command `f!feedback [user <user>] [feed <feed>] [label <label>]`. This command doesn't require any arguments, but you can include filter options to tighten up the results. You can filter by author, feed, and label. You can add more than one filter, too. Their order doesn't matter.
 
-Just like creating it, feedback can be deleted in two ways. You can use the command, `f!fb <feed> <feedback> delete`, or simply delete the feedback message. When feedback is being created, both the creator and moderators can cancel it by typing "cancel" at the right time.
+### Editing and deleting feedback
+
+After creating feedback, the author can still edit or delete it. You do this by adding a reaction to any feedback message made by you. Reacting with "✍️" (`:writing_hand:`) will open a channel for you, similar to one that is opened when creating feedback. Reacting with "🗑️" (`:waste_basket:`) will delete the feedback. As a moderator, you can do this for any feedback message.
+
+Additionally, moderators can delete feedback using the command `f!fb <feed> <feedback> delete`. Simply deleting the feedback message is also an option.
 
 ## Permissions & Moderation
 
 By default, the only thing members can do is create feedback. Though, there's two different types of permissions you can assign to a role, to then grant to specific users.
 
-The first permission level is moderator. This will give users access to view feedback, view feedback creation channels, and delete them. They can also export feedback using the `f!export [(csv|json)]` command.
+The first permission level is moderator. This will give users access to view, edit and delete feedback, even while it's being created. They can also export feedback using the `f!export [(csv|json)]` command.
 
 The second permission level is administrator. This includes all the permissions a moderator has, as well as the ability to create, modify and delete feeds, labels and triggers. Admins can also change the roles these permissions are assigned to, as well as the bot's prefix, using `f!config`.
 
@@ -173,6 +184,7 @@ f!triggers <trigger> emoji <value>
 f!triggers <trigger> message <value>
 
 f!feedback <feed_id> <feedback_id>
+f!feedback [user <user>] [feed <feed>] [label <label>]
 f!export (csv|json)
 
 f!config [option] [value]

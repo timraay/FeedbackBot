@@ -44,7 +44,7 @@ feedback
 triggers
 - guild_id              INT
 - feed_id               INT
-- trigger_id            INT
+- trigger_id            INT     PK
 - trigger_emoji         STR
 - trigger_channel_id    INT
 - trigger_message_id    INT

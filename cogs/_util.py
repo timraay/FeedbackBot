@@ -15,7 +15,10 @@ For each feed, you can (but don't have to) create **labels**. Members can assign
 
 And finally we have **triggers**. Triggers are reactions under a message which members may react with to start creating feedback for the feed it is bound to. This too is completely optional, but it is a lot cleaner than running a command.
 
-Now that you understand the basic terms, we can move on. Using the command `f!help [topic]` you can read more about specifics and how to set them up. Available topics are feeds, labels, triggers, feedback, permissions.
+Now that you understand the basic terms, we can move on. Using the command `f!help [topic]` you can read more about specifics and how to set them up.
+
+Available topics are:
+feeds, labels, triggers, feedback, permissions
 """
 HELP_FEEDS = """
 A feed consists of 5 elements: The name, shortname, color, description, and channel.
@@ -78,8 +81,10 @@ f!triggers <trigger> message [value]
 ```
 To delete a trigger, use `f!trigger <trigger> delete`.
 """
-HELP_FEEDBACK = """
+HELP_FEEDBACK = ["""
 What feedback is and how to create it is all what your guild members will have to know, and it is your job to tell them. Using feed and label descriptions is a great way of giving the user some guidelines as to what to write, too.
+
+Users can only create (or edit) one feedback message at a time.
 
 **Creating feedback**
 
@@ -87,16 +92,20 @@ Feedback can be created in two ways. Users can run the `f!new <feed>` command, o
 
 **Viewing feedback**
 
-Feedback is sent to the feed's channel. Anyone with access to that channel can thus see the feedback message. Moderators however can also see a more detailed look of the feedback elsewhere using the `f!feedback <feed> <feedback>`, "feed" being the shortname or index of the feed and "feedback" being the ID each feedback gets (the number after the hashtag). Currently it is not possible to edit feedback. Alternatively, moderators can list all feedback sent by a specific user using the command `f!fb user <user>`.
+Feedback is sent to the feed's channel. Anyone with access to that channel can thus see the feedback message. Moderators however can also see a more detailed look of the feedback using the command `f!feedback <feed> <feedback>`, "feed" being the shortname or index of the feed and "feedback" being the ID each feedback gets (the number after the hashtag).
 
+Alternatively, moderators can list feedback as well using the command `f!feedback [user <user>] [feed <feed>] [label <label>]`. This command doesn't require any arguments, but you can include filter options to tighten up the results. You can filter by author, feed, and label. You can add more than one filter, too. Their order doesn't matter.
+""","""
 **Deleting feedback**
 
-Just like creating it, feedback can be deleted in two ways. You can use the command, `f!fb <feed> <feedback> delete`, or simply delete the feedback message. When feedback is being created, both the creator and moderators can cancel it by typing "cancel" at the right time.
-"""
+After creating feedback, the author can still edit or delete it. You do this by adding a reaction to any feedback message made by you. Reacting with "✍️" (`:writing_hand:`) will open a channel for you, similar to one that is opened when creating feedback. Reacting with "🗑️" (`:waste_basket:`) will delete the feedback. As a moderator, you can do this for any feedback message.
+
+Additionally, moderators can delete feedback using the command `f!fb <feed> <feedback> delete`. Simply deleting the feedback message is also an option.
+"""]
 HELP_PERMISSIONS = """
 By default, the only thing members can do is create feedback. Though, there's two different types of permissions you can assign to a role, to then grant to specific users.
 
-The first permission level is moderator. This will give users access to view feedback, view feedback creation channels, and delete them. They can also export feedback using the `f!export [(csv|json)]` command.
+The first permission level is moderator. This will give users access to view, edit and delete feedback, even while it's being created. They can also export feedback using the `f!export [(csv|json)]` command.
 
 The second permission level is administrator. This includes all the permissions a moderator has, as well as the ability to create, modify and delete feeds, labels and triggers. Admins can also change the roles these permissions are assigned to, as well as the bot's prefix, using `f!config`.
 
@@ -131,15 +140,19 @@ class _util(commands.Cog):
 
     @commands.command(aliases=['guide', 'guides'])
     async def help(self, ctx, category: str = None):
-        embed = discord.Embed()
-        if not category: embed.description = HELP_DEFAULT
-        elif category.lower() in ["feed", "feeds"]: embed.description = HELP_FEEDS
-        elif category.lower() in ["label", "labels"]: embed.description = HELP_LABELS
-        elif category.lower() in ["feedback"]: embed.description = HELP_FEEDBACK
-        elif category.lower() in ["trigger", "triggers"]: embed.description = HELP_TRIGGERS
-        elif category.lower() in ["perm", "perms", "permission", "permissions", "admin", "administration", "mod", "moderation"]: embed.description = HELP_PERMISSIONS
-        else: embed.description = HELP_DEFAULT
-        await ctx.send(embed=embed)
+        async def send(message):
+            if not isinstance(message, (list, tuple)):
+                message = list(message)
+            for m in message:
+                embed = discord.Embed(description=m)
+                await ctx.send(embed=embed)
+        if not category: send(HELP_DEFAULT)
+        elif category.lower() in ["feed", "feeds"]: await send(HELP_FEEDS)
+        elif category.lower() in ["label", "labels"]: await send(HELP_LABELS)
+        elif category.lower() in ["feedback"]: await send(HELP_FEEDBACK)
+        elif category.lower() in ["trigger", "triggers"]: await send(HELP_TRIGGERS)
+        elif category.lower() in ["perm", "perms", "permission", "permissions", "admin", "administration", "mod", "moderation"]: await send(HELP_PERMISSIONS)
+        else: await send(HELP_DEFAULT)
 
         
     @commands.command()
