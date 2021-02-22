@@ -142,11 +142,11 @@ class _util(commands.Cog):
     async def help(self, ctx, category: str = None):
         async def send(message):
             if not isinstance(message, (list, tuple)):
-                message = list(message)
+                message = [message]
             for m in message:
                 embed = discord.Embed(description=m)
                 await ctx.send(embed=embed)
-        if not category: send(HELP_DEFAULT)
+        if not category: await send(HELP_DEFAULT)
         elif category.lower() in ["feed", "feeds"]: await send(HELP_FEEDS)
         elif category.lower() in ["label", "labels"]: await send(HELP_LABELS)
         elif category.lower() in ["feedback"]: await send(HELP_FEEDBACK)
