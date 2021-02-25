@@ -69,6 +69,7 @@ f!feed <feed> desc [new_value..]
 f!feed <feed> color [new_value]
 f!feed <feed> channel [new_value..]
 f!feed <feed> anonymous [new_value]
+f!feed <feed> reactions [emoji1,emoji2,...]
 ```
 To delete a feed, use `f!feed <feed> delete`.
 
@@ -165,6 +166,7 @@ f!feeds <feed> desc [new_value..]
 f!feeds <feed> color [new_value]
 f!feeds <feed> channel [new_value..]
 f!feeds <feed> anonymous [new_value]
+f!feeds <feed> reactions [emoji1,emoji2,...]
 f!feeds <feed> labels
 f!feeds <feed> labels create
 f!feeds <feed> labels <label>
@@ -182,6 +184,7 @@ f!triggers <trigger> delete
 f!triggers <trigger> feed <value>
 f!triggers <trigger> emoji <value>
 f!triggers <trigger> message <value>
+f!feed <feed> reactions [emoji1,emoji2,...]
 
 f!feedback <feed_id> <feedback_id>
 f!feedback [user <user>] [feed <feed>] [label <label>]

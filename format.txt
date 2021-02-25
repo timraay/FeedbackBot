@@ -67,6 +67,7 @@ f!feeds <feed> desc [new_value..]
 f!feeds <feed> color [new_value]
 f!feeds <feed> channel [new_value..]
 f!feeds <feed> anonymous [new_value]
+f!feeds <feed> reactions [emoji1,emoji2,...]
 f!feeds <feed> labels
 f!feeds <feed> labels create
 f!feeds <feed> labels <label>
