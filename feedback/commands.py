@@ -4,7 +4,7 @@ import asyncio
 import re
 import json
 
-from feedback import models
+from feedback import models, logs
 from utils import add_empty_fields, int_to_emoji, ask_reaction, ask_message
 from cogs._events import CustomException
 
@@ -1055,6 +1055,7 @@ async def _build_feedback(ctx, feed, feedback=None):
         title = f"Editing {feed.feed_name}"
         message = await channel.send(f"{ctx.author.mention} edit your feedback here!")
         feedback.creation_channel_id = channel.id
+        old_desc = feedback.feedback_desc
         feedback.save()
         feedback.finished = 0
     else:
@@ -1201,10 +1202,16 @@ async def _build_feedback(ctx, feed, feedback=None):
             await channel.delete()
 
             if _mode == "create":
+                # Add emoji
                 for emoji in feed.reactions.split(','):
                     if emoji:
                         try: await sent.add_reaction(emoji)
                         except: pass
+                # Log action
+                await logs.log_create_action(ctx, feedback)
+            elif _mode == "edit":
+                # Log action
+                await logs.log_edit_action(ctx, feedback, old_desc)
             return True
         elif emoji == "<:no:808045512393621585>":
             embed = discord.Embed(color=discord.Color(int(feed.feed_color, 16)))
@@ -1275,6 +1282,7 @@ async def delete_feedback(ctx, feed, feedback):
     res = await ask_reaction(ctx, embed, options)
     
     if res == "<:yes:809149148356018256>":
+        await logs.log_delete_action(ctx, feedback)
         feedback.delete()
         try:
             message = await commands.MessageConverter().convert(ctx, f'{feedback.channel_id}-{feedback.message_id}')

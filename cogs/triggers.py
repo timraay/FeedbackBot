@@ -3,7 +3,7 @@ from discord.ext import commands
 import asyncio
 
 from feedback import commands as cmd
-from feedback import models
+from feedback import models, logs
 from cogs._events import CustomException
 
 class triggers(commands.Cog):
@@ -80,6 +80,7 @@ class triggers(commands.Cog):
             elif str(payload.emoji) == "🗑️":
                 await message.remove_reaction(payload.emoji, payload.member)
                 if payload.member.id == feedback.feedback_author or await models.has_perms(level=1).predicate(ctx):
+                    await logs.log_delete_action(ctx, feedback)
                     feedback.delete()
                     await message.delete()
             elif feed.reactions and str(payload.emoji) not in emojis:
