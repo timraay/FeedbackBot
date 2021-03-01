@@ -17,7 +17,7 @@ class config(commands.Cog):
         if not option:
             admin_role = ctx.guild.get_role(guild.admin_role)
             mod_role = ctx.guild.get_role(guild.mod_role)
-            log_channel = ctx.guild.get_text_channel(guild.log_channel)
+            log_channel = ctx.guild.get_channel(guild.log_channel)
             
             embed = discord.Embed(title=f"Configuration for guild \"{ctx.guild.name}\"")
             embed.add_field(name='Command Prefix', value=f"ID: `command_prefix`\nValue: **{guild.command_prefix}**\n\n*The prefix used to invoke commands with*")
@@ -70,11 +70,11 @@ class config(commands.Cog):
             elif option.lower() in ["log", "logchannel", "log_channel", "logs", "logschannel", "logs_channel"]:
                 try: new_channel = await commands.TextChannelConverter().convert(ctx, value)
                 except commands.BadArgument: raise CustomException('Invalid channel!', f'Couldn\'t find a channel with argument "{value}"')
-                old_channel = ctx.guild.get_text_channel(guild.log_channel)
+                old_channel = ctx.guild.get_channel(guild.log_channel)
 
                 embed = discord.Embed(color=discord.Color(7844437))
                 embed.set_author(name="Log channel updated", icon_url="https://cdn.discordapp.com/emojis/809149148356018256.png")
-                embed.add_field(name="Old value", value=old_channel.mention if old_role else 'None')
+                embed.add_field(name="Old value", value=old_channel.mention if old_channel else 'None')
                 embed.add_field(name="New value", value=new_channel.mention)
 
                 guild.log_channel = new_channel.id

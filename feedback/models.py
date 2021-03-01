@@ -86,7 +86,7 @@ class Guild():
         return cls(guild_id)
 
     def save(self):
-        cur.execute("UPDATE guilds SET command_prefix = ?, admin_role = ?, mod_role = ?, log_channel WHERE guild_id = ?", (self.command_prefix, self.admin_role, self.mod_role, self.log_channel, self.guild_id))
+        cur.execute("UPDATE guilds SET command_prefix = ?, admin_role = ?, mod_role = ?, log_channel = ? WHERE guild_id = ?", (self.command_prefix, self.admin_role, self.mod_role, self.log_channel, self.guild_id))
         db.commit()
 
     @property
