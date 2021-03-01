@@ -7,6 +7,7 @@ guilds
 - command_prefix        STR
 - admin_role            INT
 - mod_role              INT
+- log_channel           INT
 
 feeds
 - guild_id              INT

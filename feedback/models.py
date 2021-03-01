@@ -32,6 +32,7 @@ cur.execute("""CREATE TABLE IF NOT EXISTS "guilds" (
 	"command_prefix"	TEXT DEFAULT 'f!',
 	"admin_role"	INTEGER DEFAULT 0,
 	"mod_role"	INTEGER DEFAULT 0,
+    "log_channel"	INTEGER DEFAULT 0,
 	PRIMARY KEY("guild_id")
 )""")
 cur.execute("""CREATE TABLE IF NOT EXISTS "labels" (
@@ -76,16 +77,16 @@ class Guild():
         cur.execute("SELECT * FROM guilds WHERE guild_id = ?", (guild_id,))
         res = cur.fetchone()
         if not res: raise NotFound('Guild %s is not in database' % guild_id)
-        self.guild_id, self.command_prefix, self.admin_role, self.mod_role = res
+        self.guild_id, self.command_prefix, self.admin_role, self.mod_role, self.log_channel = res
 
     @classmethod
-    def create(cls, guild_id, command_prefix='f!', admin_role=0, mod_role=0):
-        cur.execute("INSERT INTO guilds VALUES (?,?,?,?)", (guild_id, command_prefix, admin_role, mod_role))
+    def create(cls, guild_id, command_prefix='f!', admin_role=0, mod_role=0, log_channel=0):
+        cur.execute("INSERT INTO guilds VALUES (?,?,?,?,?)", (guild_id, command_prefix, admin_role, mod_role, log_channel))
         db.commit()
         return cls(guild_id)
 
     def save(self):
-        cur.execute("UPDATE guilds SET command_prefix = ?, admin_role = ?, mod_role = ? WHERE guild_id = ?", (self.command_prefix, self.admin_role, self.mod_role, self.guild_id))
+        cur.execute("UPDATE guilds SET command_prefix = ?, admin_role = ?, mod_role = ?, log_channel = ? WHERE guild_id = ?", (self.command_prefix, self.admin_role, self.mod_role, self.log_channel, self.guild_id))
         db.commit()
 
     @property
