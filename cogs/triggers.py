@@ -32,7 +32,7 @@ class triggers(commands.Cog):
             trigger = models.Trigger.find(ctx.guild.id, args[0])
             # f!trigger <trigger> delete
             if args[1].lower() in ['delete', 'remove']:
-                await cmd.delete_feed(ctx, trigger)
+                await cmd.delete_trigger(ctx, trigger)
             # f!trigger <trigger> feed
             elif args[1].lower() in ['feed']:
                 if len(args) >= 3: await cmd.set_trigger_feed(ctx, trigger, args[2])
