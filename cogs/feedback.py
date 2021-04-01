@@ -4,7 +4,7 @@ import io
 import json
 import re
 
-from feedback import commands as cmd, models
+from feedback import commands as cmd, models, logs
 from cogs._events import CustomException
 
 class feedback(commands.Cog):
@@ -142,8 +142,16 @@ class feedback(commands.Cog):
     async def on_raw_message_delete(self, payload):
         try: feedback = models.Feedback.find(payload.channel_id, payload.message_id)
         except models.NotFound: pass
-        else: feedback.delete()
-
+        else:
+            guild = self.bot.get_guild(payload.guild_id)
+            channel = guild.get_channel(payload.channel_id)
+            try: message = await channel.fetch_message(payload.message_id)
+            except discord.NotFound: pass
+            else:
+                ctx = await self.bot.get_context(message)
+                await logs.log_delete_action(ctx, feedback)
+            finally:
+                feedback.delete()
 
     @commands.Cog.listener()
     async def on_guild_channel_delete(self, channel):
