@@ -58,16 +58,16 @@ class triggers(commands.Cog):
         feedback = None
         try: feedback = models.Feedback(options={'message_id': payload.message_id})
         except:
-            try: trigger = models.Trigger(options={'message_id': payload.message_id, 'trigger_emoji': str(payload.emoji)})
-            except: pass
+            try: trigger = models.Trigger(options={'trigger_message_id': payload.message_id, 'trigger_emoji': str(payload.emoji)})
+            except: return
+            
         
-        if feedback or trigger:
-            guild = self.bot.get_guild(payload.guild_id)
-            channel = guild.get_channel(payload.channel_id)
-            message = await channel.fetch_message(payload.message_id)
-            if not message: return
-            ctx = await self.bot.get_context(message)
-            ctx.author = payload.member
+        guild = self.bot.get_guild(payload.guild_id)
+        channel = guild.get_channel(payload.channel_id)
+        message = await channel.fetch_message(payload.message_id)
+        if not message: return
+        ctx = await self.bot.get_context(message)
+        ctx.author = payload.member
 
         if feedback:
             feed = feedback.feed

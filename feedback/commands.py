@@ -473,7 +473,7 @@ async def create_trigger(ctx):
     
     # trigger_emoji
     embed = discord.Embed(color=discord.Color.from_rgb(122, 255, 149))
-    embed.set_author(name="Creating new label... (2/3)")
+    embed.set_author(name="Creating new trigger... (2/3)")
     embed.add_field(name="What should the trigger's emoji be?", value="This is what will be used for the reaction under the trigger message. When using a custom emoji, make sure it is from a server I am also in.")
     embed.set_footer(text="Type \"cancel\" to cancel the creation process")
     trigger_emoji = await ask_message(ctx, embed=embed)
@@ -494,7 +494,7 @@ async def create_trigger(ctx):
 
     # trigger_message
     embed = discord.Embed(color=discord.Color.from_rgb(122, 255, 149))
-    embed.set_author(name="Creating new label... (3/3)")
+    embed.set_author(name="Creating new trigger... (3/3)")
     embed.add_field(name="What message should the trigger be under?", value="This is the message that will have the reaction to trigger the trigger. Enter either the URL to a message, the channel and message ID with a dash inbetween (`<channel id>-<message id>`), or whenever it's in this channel just the message ID.")
     embed.set_footer(text="Type \"cancel\" to cancel the creation process")
     trigger_message = await ask_message(ctx, embed=embed)
