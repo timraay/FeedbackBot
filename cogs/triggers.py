@@ -71,7 +71,7 @@ class triggers(commands.Cog):
 
         if feedback:
             feed = feedback.feed
-            emojis = feed.reactions.split(',')
+            emojis = feed.reactions.split(',') if feed.reactions else []
                 
             if str(payload.emoji) == "✍️":
                 await message.remove_reaction(payload.emoji, payload.member)

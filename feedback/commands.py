@@ -1203,10 +1203,11 @@ async def _build_feedback(ctx, feed, feedback=None):
 
             if _mode == "create":
                 # Add emoji
-                for emoji in feed.reactions.split(','):
-                    if emoji:
-                        try: await sent.add_reaction(emoji)
-                        except: pass
+                if feed.reactions:
+                    for emoji in feed.reactions.split(','):
+                        if emoji:
+                            try: await sent.add_reaction(emoji)
+                            except: pass
                 # Log action
                 await logs.log_create_action(ctx, feedback)
             elif _mode == "edit":
